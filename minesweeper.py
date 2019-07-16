@@ -2,6 +2,7 @@
 
 import sys
 import os
+import random
 
 import pygame
 
@@ -23,9 +24,10 @@ class Minesweeper:
 
         self.clock = pygame.time.Clock()
 
-        # Create cells
-        self.cells = pygame.sprite.Group()
+        # Create cells and mines
+        self.cells = []
         self._create_grid()
+        self._create_mines()
 
     def run_game(self):
         """Function with main game loop."""
@@ -46,31 +48,56 @@ class Minesweeper:
         # Fill the background
         self.screen.fill(self.settings.background_colour)
         # Draw cells to the screen
-        self.cells.draw(self.screen)
+        self._draw_cells()
         # Update the screen
         pygame.display.update()
 
-    def _create_cell(self, cell_x, cell_y):
+    def _create_cell(self, cell_x, cell_y, row_number):
         """Create one cell and add it to cells group."""
         cell = Cell(self)
         cell.rect.x = cell_x
         cell.rect.y = cell_y
-        self.cells.add(cell)
+        self.cells[row_number].append(cell)
 
     def _create_row(self, row_number):
         """Create one row of cells."""
-        for i in range(0, self.settings.cells_x):
-            cell_x = self.settings.side_margin + i * self.settings.cell_size
+        for column in range(0, self.settings.cells_x):
+            cell_x = self.settings.side_margin + column*self.settings.cell_size
             cell_y = (self.settings.top_margin
-                      + row_number * self.settings.cell_size)
-            self._create_cell(cell_x, cell_y)
+                      + row_number*self.settings.cell_size)
+            self._create_cell(cell_x, cell_y, row_number)
 
     def _create_grid(self):
         """Create full grid of cells."""
-        for i in range(0, self.settings.cells_y):
-            self._create_row(i)
+        for row in range(0, self.settings.cells_y):
+            self.cells.append([])
+            self._create_row(row)
+
+    def _draw_cells(self):
+        """Draw all cells to the screen."""
+        for row in self.cells:
+            for cell in row:
+                cell.blitme()
+
+    def _create_mines(self):
+        """Give mines to desired number of cells."""
+        # Create a temporary list of all cells
+        temp_cells = []
+        for row in self.cells:
+            for cell in row:
+                temp_cells.append(cell)
+
+        # Create a list of random indexes
+        mines_indexes = []
+        for _ in range(self.settings.mines):
+            mines_indexes.append(random.randint(0, len(temp_cells) - 1))
+        print(mines_indexes)
+
+        # Assign mines
+        for index in mines_indexes:
+            temp_cells[index].status = -1
 
 
 if __name__ == "__main__":
-    minesweeper = Minesweeper()
-    minesweeper.run_game()
+    MINESWEEPER = Minesweeper()
+    MINESWEEPER.run_game()
