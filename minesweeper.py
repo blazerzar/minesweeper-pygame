@@ -28,6 +28,7 @@ class Minesweeper:
         self.cells = []
         self._create_grid()
         self._create_mines()
+        self._calculate_all_neighbours()
 
     def run_game(self):
         """Function with main game loop."""
@@ -42,6 +43,17 @@ class Minesweeper:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_buttons(mouse_pos)
+
+    def _check_buttons(self, mouse_pos):
+        """Check for button presses and respond to them."""
+        for row in self.cells:
+            for cell in row:
+                cell_clicked = cell.rect.collidepoint(mouse_pos)
+                if cell_clicked:
+                    cell.state = 1
 
     def _update_screen(self):
         """Update all the elements on the screen."""
@@ -91,11 +103,42 @@ class Minesweeper:
         mines_indexes = []
         for _ in range(self.settings.mines):
             mines_indexes.append(random.randint(0, len(temp_cells) - 1))
-        print(mines_indexes)
 
         # Assign mines
         for index in mines_indexes:
             temp_cells[index].status = -1
+
+    def _calculate_all_neighbours(self):
+        """Calculate neighbours of all the cells."""
+        for row in range(self.settings.cells_y):
+            for column in range(self.settings.cells_x):
+                # Stop calculating if cell has a mine.
+                if self.cells[row][column].status == 0:
+                    self._check_neighbours(row, column)
+
+    def _check_neighbours(self, row, column):
+        """Calculate neighbours of a given cell."""
+        mines = 0
+        cell_x = []
+        cell_y = []
+        # Go through all coordinates,
+        # if they are good, add them to lists of coordinates.
+        for p_value in range(column - 1, column + 2):
+            if 0 <= p_value < self.settings.cells_x:
+                cell_x.append(p_value)
+        for q_value in range(row - 1, row + 2):
+            if 0 <= q_value < self.settings.cells_y:
+                cell_y.append(q_value)
+
+        # Check every cell and add 1 to mines if it has a mine.
+        for x_value in cell_x:
+            for y_value in cell_y:
+                if self.cells[y_value][x_value].status == -1:
+                    mines += 1
+
+        # Change cell's status according
+        # to number of mines around it.
+        self.cells[row][column].status = mines
 
 
 if __name__ == "__main__":
