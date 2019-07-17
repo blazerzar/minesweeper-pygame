@@ -94,7 +94,7 @@ class Cell:
             (self.settings.cell_size, self.settings.cell_size))
 
         # Status -1 means mine, 0 is empty, number refers to number of
-        # adjesent mines.
+        # adjesent mines. -2 represents non exploded mine.
         self.status = 0
 
         # State 1 means closed, 0 means opened, -1 means flagged.
@@ -105,6 +105,7 @@ class Cell:
 
     def open_cell(self, cells, minesweeper):
         """Open the selected cell and cell's around it, if its status is 0"""
+        # Check for empty closed cells.
         if self.status == 0 and self.state == 1:
             self.state = 0
             # Open all the cells around the original one.
@@ -125,11 +126,19 @@ class Cell:
                     if x_value != self.column or y_value != self.row:
                         cells[y_value][x_value].open_cell(cells, minesweeper)
 
+        # Check for non flagged cells.
         if self.state != -1:
             self.state = 0
             if self.status == -1:
+                # Stop the game if mine is clicked.
                 minesweeper.stats["state"] = -1
                 minesweeper.emoji_button.current_emoji = 0
+                # Open all other mines.
+                for row in minesweeper.cells:
+                    for cell in row:
+                        if cell.status == -1 and cell.state == 1:
+                            cell.state = 0
+                            cell.status = -2
 
     def flag_cell(self, cells):
         """Flag the selected cell."""
@@ -164,6 +173,8 @@ class Cell:
                 self.screen.blit(self.image_open, self.rect)
             elif self.status == -1:
                 self.screen.blit(self.image_mine_exploded, self.rect)
+            elif self.status == -2:
+                self.screen.blit(self.image_mine, self.rect)
             elif self.status == 1:
                 self.screen.blit(self.image_cell_1, self.rect)
             elif self.status == 2:

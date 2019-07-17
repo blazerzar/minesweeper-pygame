@@ -1,13 +1,13 @@
 """The main file with all the logic for Minesweeper"""
 
-import sys
 import os
 import random
+import sys
 
 import pygame
 
-from cell import Cell
 from button import Button
+from cell import Cell
 from settings import Settings
 
 
@@ -27,7 +27,7 @@ class Minesweeper:
 
         # Dictionary to hold stats
         self.stats = {
-            "state": 0,  # 0 means playing, -1 is dead, 1 solved
+            "state": 2,  # 0 means playing, -1 is dead, 1 solved, 2 start
             "mines_left": self.settings.mines,
             "time": 0,
             "time_float": 0
@@ -63,6 +63,12 @@ class Minesweeper:
             self.stats["state"] = 1
             self.emoji_button.current_emoji = 2
 
+            # Flag all mine cells if not already
+            for row in self.cells:
+                for cell in row:
+                    if cell.status == -1 and cell.state != -1:
+                        cell.state = -1
+
     def _check_events(self):
         """Check for events and respond to them."""
         for event in pygame.event.get():
@@ -72,24 +78,37 @@ class Minesweeper:
                 mouse_pos = pygame.mouse.get_pos()
                 self.emoji_button.current_emoji *= -1
                 if event.button == 3:
-                    self._check_right_mouse(mouse_pos)
+                    if self.stats["state"] == 0:
+                        self._check_right_mouse(mouse_pos)
             elif event.type == pygame.MOUSEBUTTONUP:
                 mouse_pos = pygame.mouse.get_pos()
                 self.emoji_button.current_emoji *= -1
                 if event.button == 1:
                     self._check_left_mouse(mouse_pos)
                 elif event.button == 2:
-                    self._check_middle_mouse(mouse_pos)
+                    if self.stats["state"] == 0:
+                        self._check_middle_mouse(mouse_pos)
 
     def _check_left_mouse(self, mouse_pos):
         """Check for left mouse button presses and respond to them."""
         # Check if one of the cells is clicked.
-        for row in self.cells:
-            for cell in row:
-                cell_clicked = cell.rect.collidepoint(mouse_pos)
-                # Open the selected cell.
-                if cell_clicked and cell.state == 1:
-                    cell.open_cell(self.cells, self)
+        if self.stats["state"] == 0:
+            for row in self.cells:
+                for cell in row:
+                    cell_clicked = cell.rect.collidepoint(mouse_pos)
+                    # Open the selected cell.
+                    if cell_clicked and cell.state == 1:
+                        cell.open_cell(self.cells, self)
+
+        # Check if one of the cells is clicked at the beginning.
+        if self.stats["state"] == 2:
+            self.stats["state"] = 0
+            for row in self.cells:
+                for cell in row:
+                    cell_clicked = cell.rect.collidepoint(mouse_pos)
+                    # Open the selected cell.
+                    if cell_clicked and cell.state == 1:
+                        cell.open_cell(self.cells, self)
 
         # Check if the emoji button is clicked.
         if self.emoji_button.rect.collidepoint(mouse_pos):
@@ -245,7 +264,7 @@ class Minesweeper:
 
         # Reset stats
         self.stats = {
-            "state": 0,
+            "state": 2,
             "mines_left": self.settings.mines,
             "time": 0,
             "time_float": 0
