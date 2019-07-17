@@ -24,7 +24,7 @@ class Minesweeper:
 
         self.clock = pygame.time.Clock()
 
-        # Create cells and mines
+        # Create cells and mines.
         self.cells = []
         self._create_grid()
         self._create_mines()
@@ -32,7 +32,7 @@ class Minesweeper:
 
     def run_game(self):
         """Function with main game loop."""
-    	# Main game loop
+        # Main game loop
         while True:
             self._check_events()
             self._update_screen()
@@ -45,23 +45,67 @@ class Minesweeper:
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                self._check_buttons(mouse_pos)
+                if event.button == 1:
+                    self._check_left_mouse(mouse_pos)
+                elif event.button == 2:
+                    self._check_middle_mouse(mouse_pos)
+                elif event.button == 3:
+                    self._check_right_mouse(mouse_pos)
 
-    def _check_buttons(self, mouse_pos):
-        """Check for button presses and respond to them."""
+    def _check_left_mouse(self, mouse_pos):
+        """Check for left mouse button presses and respond to them."""
         for row in self.cells:
             for cell in row:
                 cell_clicked = cell.rect.collidepoint(mouse_pos)
-                if cell_clicked:
-                    cell.state = 1
+                # Open the selected cell.
+                if cell_clicked and cell.state == 1:
+                    cell.open_cell(self.cells)
+
+    def _check_middle_mouse(self, mouse_pos):
+        """check for middle mouse button presses and respond to them."""
+        for row in self.cells:
+            for cell in row:
+                cell_clicked = cell.rect.collidepoint(mouse_pos)
+                # Check if cell is already opened.
+                # Only chord if cell.flagged_number == cell.status
+                if (cell_clicked and cell.state == 0
+                        and cell.flagged_number == cell.status):
+                    # Open all the cells around the original one.
+                    cell_x = []
+                    cell_y = []
+
+                    # Go through all neighbour's coordinates
+                    # and only use good ones.
+                    for p_value in range(cell.column - 1, cell.column + 2):
+                        if 0 <= p_value < self.settings.cells_x:
+                            cell_x.append(p_value)
+                    for q_value in range(cell.row - 1, cell.row + 2):
+                        if 0 <= q_value < self.settings.cells_y:
+                            cell_y.append(q_value)
+
+                    # Open surrounding cells.
+                    for x_value in cell_x:
+                        for y_value in cell_y:
+                            if x_value != cell.column or y_value != cell.row:
+                                self.cells[y_value][x_value].open_cell(
+                                    self.cells)
+
+    def _check_right_mouse(self, mouse_pos):
+        """Check for right mouse button presses and respond to them."""
+        for row in self.cells:
+            for cell in row:
+                cell_clicked = cell.rect.collidepoint(mouse_pos)
+                # Only flag closed cells.
+                if cell_clicked and cell.state != 0:
+                    cell.flag_cell(self.cells)
 
     def _update_screen(self):
         """Update all the elements on the screen."""
-        # Fill the background
+        # Fill the background.
         self.screen.fill(self.settings.background_colour)
-        # Draw cells to the screen
+        # Draw cells to the screen.
         self._draw_cells()
-        # Update the screen
+        # Update the screen.
         pygame.display.update()
 
     def _create_cell(self, cell_x, cell_y, row_number):
@@ -70,6 +114,10 @@ class Minesweeper:
         cell.rect.x = cell_x
         cell.rect.y = cell_y
         self.cells[row_number].append(cell)
+
+        # Set cell's row and column attributes.
+        cell.column = self.cells[row_number].index(cell)
+        cell.row = row_number
 
     def _create_row(self, row_number):
         """Create one row of cells."""
@@ -93,18 +141,18 @@ class Minesweeper:
 
     def _create_mines(self):
         """Give mines to desired number of cells."""
-        # Create a temporary list of all cells
+        # Create a temporary list of all cells.
         temp_cells = []
         for row in self.cells:
             for cell in row:
                 temp_cells.append(cell)
 
-        # Create a list of random indexes
+        # Create a list of random indexes.
         mines_indexes = []
         for _ in range(self.settings.mines):
             mines_indexes.append(random.randint(0, len(temp_cells) - 1))
 
-        # Assign mines
+        # Assign mines.
         for index in mines_indexes:
             temp_cells[index].status = -1
 
@@ -142,5 +190,5 @@ class Minesweeper:
 
 
 if __name__ == "__main__":
-    MINESWEEPER = Minesweeper()
-    MINESWEEPER.run_game()
+    minesweeper = Minesweeper()
+    minesweeper.run_game()
