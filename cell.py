@@ -32,7 +32,7 @@ class Cell:
             self.image_open,
             (self.settings.cell_size, self.settings.cell_size))
 
-        # Mini images
+        # Mine images
         self.image_mine = pygame.image.load(os.path.join(
             minesweeper.my_path, "images/mine_open.bmp"))
         self.image_mine = pygame.transform.scale(
@@ -156,11 +156,14 @@ class Cell:
             if 0 <= q_value < self.settings.cells_y:
                 cell_y.append(q_value)
 
-        # Add 1 to every cell's attribute.
+        # Add 1 to every cell's attribute or remove 1.
         for x_value in cell_x:
             for y_value in cell_y:
                 if x_value != self.column or y_value != self.row:
-                    cells[y_value][x_value].flagged_number += 1
+                    if self.state == -1:
+                        cells[y_value][x_value].flagged_number += 1
+                    elif self.state == 1:
+                        cells[y_value][x_value].flagged_number -= 1
 
     def blitme(self):
         """Draw cell to the screen."""

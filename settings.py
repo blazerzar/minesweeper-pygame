@@ -15,7 +15,7 @@ class Settings:
 
         # Game mechanics settings
         self.scale = 3
-        self.mines = 8
+        self.mines = 10
         self.cells_x = 8
         self.cells_y = 8
         self.cell_size = 16 * self.scale
