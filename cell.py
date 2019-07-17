@@ -9,8 +9,7 @@ class Cell:
     """Class to represent a cell."""
 
     def __init__(self, minesweeper):
-        "Initialize cell attributes."
-        super().__init__()
+        """Initialize cell attributes."""
         self.screen = minesweeper.screen
         self.screen_rect = self.screen.get_rect()
         self.settings = minesweeper.settings
@@ -32,11 +31,20 @@ class Cell:
         self.image_open = pygame.transform.scale(
             self.image_open,
             (self.settings.cell_size, self.settings.cell_size))
+
+        # Mini images
         self.image_mine = pygame.image.load(os.path.join(
             minesweeper.my_path, "images/mine_open.bmp"))
         self.image_mine = pygame.transform.scale(
             self.image_mine,
             (self.settings.cell_size, self.settings.cell_size))
+        self.image_mine_exploded = pygame.image.load(os.path.join(
+            minesweeper.my_path, "images/mine_exploded.bmp"))
+        self.image_mine_exploded = pygame.transform.scale(
+            self.image_mine_exploded,
+            (self.settings.cell_size, self.settings.cell_size))
+
+        # Numbers images
         self.image_cell_1 = pygame.image.load(os.path.join(
             minesweeper.my_path, "images/cell_1.bmp"))
         self.image_cell_1 = pygame.transform.scale(
@@ -95,7 +103,7 @@ class Cell:
         # Number of surrounding cells that are flagged
         self.flagged_number = 0
 
-    def open_cell(self, cells):
+    def open_cell(self, cells, minesweeper):
         """Open the selected cell and cell's around it, if its status is 0"""
         if self.status == 0 and self.state == 1:
             self.state = 0
@@ -115,10 +123,13 @@ class Cell:
             for x_value in cell_x:
                 for y_value in cell_y:
                     if x_value != self.column or y_value != self.row:
-                        cells[y_value][x_value].open_cell(cells)
+                        cells[y_value][x_value].open_cell(cells, minesweeper)
 
         if self.state != -1:
             self.state = 0
+            if self.status == -1:
+                minesweeper.stats["state"] = -1
+                minesweeper.emoji_button.current_emoji = 0
 
     def flag_cell(self, cells):
         """Flag the selected cell."""
@@ -152,7 +163,7 @@ class Cell:
             if self.status == 0:
                 self.screen.blit(self.image_open, self.rect)
             elif self.status == -1:
-                self.screen.blit(self.image_mine, self.rect)
+                self.screen.blit(self.image_mine_exploded, self.rect)
             elif self.status == 1:
                 self.screen.blit(self.image_cell_1, self.rect)
             elif self.status == 2:

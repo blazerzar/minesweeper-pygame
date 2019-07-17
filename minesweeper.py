@@ -7,6 +7,7 @@ import random
 import pygame
 
 from cell import Cell
+from button import Button
 from settings import Settings
 
 
@@ -24,6 +25,17 @@ class Minesweeper:
 
         self.clock = pygame.time.Clock()
 
+        # Dictionary to hold stats
+        self.stats = {
+            "state": 0,  # 0 means playing, -1 is dead, 1 solved
+            "mines_left": self.settings.mines,
+            "time": 0,
+            "time_float": 0
+        }
+
+        # Create the button
+        self.emoji_button = Button(self)
+
         # Create cells and mines.
         self.cells = []
         self._create_grid()
@@ -35,8 +47,21 @@ class Minesweeper:
         # Main game loop
         while True:
             self._check_events()
+            self._check_solve()
             self._update_screen()
-            self.clock.tick(self.settings.game_framerate)
+            self._update_time()
+
+    def _check_solve(self):
+        """Check if all empty cells are open."""
+        all_open = True
+        for row in self.cells:
+            for cell in row:
+                if cell.status != -1 and cell.state == 1:
+                    all_open = False
+
+        if all_open:
+            self.stats["state"] = 1
+            self.emoji_button.current_emoji = 2
 
     def _check_events(self):
         """Check for events and respond to them."""
@@ -45,21 +70,30 @@ class Minesweeper:
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
+                self.emoji_button.current_emoji *= -1
+                if event.button == 3:
+                    self._check_right_mouse(mouse_pos)
+            elif event.type == pygame.MOUSEBUTTONUP:
+                mouse_pos = pygame.mouse.get_pos()
+                self.emoji_button.current_emoji *= -1
                 if event.button == 1:
                     self._check_left_mouse(mouse_pos)
                 elif event.button == 2:
                     self._check_middle_mouse(mouse_pos)
-                elif event.button == 3:
-                    self._check_right_mouse(mouse_pos)
 
     def _check_left_mouse(self, mouse_pos):
         """Check for left mouse button presses and respond to them."""
+        # Check if one of the cells is clicked.
         for row in self.cells:
             for cell in row:
                 cell_clicked = cell.rect.collidepoint(mouse_pos)
                 # Open the selected cell.
                 if cell_clicked and cell.state == 1:
-                    cell.open_cell(self.cells)
+                    cell.open_cell(self.cells, self)
+
+        # Check if the emoji button is clicked.
+        if self.emoji_button.rect.collidepoint(mouse_pos):
+            self._reset_game()
 
     def _check_middle_mouse(self, mouse_pos):
         """check for middle mouse button presses and respond to them."""
@@ -88,7 +122,7 @@ class Minesweeper:
                         for y_value in cell_y:
                             if x_value != cell.column or y_value != cell.row:
                                 self.cells[y_value][x_value].open_cell(
-                                    self.cells)
+                                    self.cells, self)
 
     def _check_right_mouse(self, mouse_pos):
         """Check for right mouse button presses and respond to them."""
@@ -97,6 +131,10 @@ class Minesweeper:
                 cell_clicked = cell.rect.collidepoint(mouse_pos)
                 # Only flag closed cells.
                 if cell_clicked and cell.state != 0:
+                    if cell.state == 1:
+                        self.stats["mines_left"] -= 1
+                    elif cell.state == -1:
+                        self.stats["mines_left"] += 1
                     cell.flag_cell(self.cells)
 
     def _update_screen(self):
@@ -105,6 +143,8 @@ class Minesweeper:
         self.screen.fill(self.settings.background_colour)
         # Draw cells to the screen.
         self._draw_cells()
+        # Draw button to the screen.
+        self.emoji_button.draw_button()
         # Update the screen.
         pygame.display.update()
 
@@ -187,6 +227,32 @@ class Minesweeper:
         # Change cell's status according
         # to number of mines around it.
         self.cells[row][column].status = mines
+
+    def _update_time(self):
+        """Update game."""
+        self.clock.tick(self.settings.game_framerate)
+        if self.stats["state"] == 0:
+            self.stats["time_float"] += 1 / self.settings.game_framerate
+            self.stats["time"] = int(self.stats["time_float"])
+
+    def _reset_game(self):
+        """Reset game to its starting state."""
+        # Remove all cells from list and recreate the grid and mines.
+        self.cells.clear()
+        self._create_grid()
+        self._create_mines()
+        self._calculate_all_neighbours()
+
+        # Reset stats
+        self.stats = {
+            "state": 0,
+            "mines_left": self.settings.mines,
+            "time": 0,
+            "time_float": 0
+        }
+
+        # Reset emoji to the normal one
+        self.emoji_button.current_emoji = 1
 
 
 if __name__ == "__main__":
