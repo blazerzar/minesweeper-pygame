@@ -43,6 +43,11 @@ class Cell:
         self.image_mine_exploded = pygame.transform.scale(
             self.image_mine_exploded,
             (self.settings.cell_size, self.settings.cell_size))
+        self.image_mine_wrong = pygame.image.load(os.path.join(
+            minesweeper.my_path, "images/mine_wrong.bmp"))
+        self.image_mine_wrong = pygame.transform.scale(
+            self.image_mine_wrong,
+            (self.settings.cell_size, self.settings.cell_size))
 
         # Numbers images
         self.image_cell_1 = pygame.image.load(os.path.join(
@@ -94,7 +99,7 @@ class Cell:
             (self.settings.cell_size, self.settings.cell_size))
 
         # Status -1 means mine, 0 is empty, number refers to number of
-        # adjesent mines. -2 represents non exploded mine.
+        # adjesent mines. -2 represents non exploded mine, -3 wrong mine.
         self.status = 0
 
         # State 1 means closed, 0 means opened, -1 means flagged.
@@ -133,12 +138,17 @@ class Cell:
                 # Stop the game if mine is clicked.
                 minesweeper.stats["state"] = -1
                 minesweeper.emoji_button.current_emoji = 0
-                # Open all other mines.
+                # Open all other mines and mark empty cells that are flagged.
                 for row in minesweeper.cells:
                     for cell in row:
+                        # Open mines.
                         if cell.status == -1 and cell.state == 1:
                             cell.state = 0
                             cell.status = -2
+                        # Mark wrong mines.
+                        if cell.status != -1 and cell.state == -1:
+                            cell.state = 0
+                            cell.status = -3
 
     def flag_cell(self, cells):
         """Flag the selected cell."""
@@ -178,6 +188,8 @@ class Cell:
                 self.screen.blit(self.image_mine_exploded, self.rect)
             elif self.status == -2:
                 self.screen.blit(self.image_mine, self.rect)
+            elif self.status == -3:
+                self.screen.blit(self.image_mine_wrong, self.rect)
             elif self.status == 1:
                 self.screen.blit(self.image_cell_1, self.rect)
             elif self.status == 2:

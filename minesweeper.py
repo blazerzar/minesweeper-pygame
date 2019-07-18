@@ -63,9 +63,9 @@ class Minesweeper:
             self.stats["state"] = 1
             self.emoji_button.current_emoji = 2
 
-            # Flag all mine cells if not already
             for row in self.cells:
                 for cell in row:
+                    # Flag all mine cells if not already
                     if cell.status == -1 and cell.state != -1:
                         cell.state = -1
 
@@ -106,6 +106,10 @@ class Minesweeper:
             for row in self.cells:
                 for cell in row:
                     cell_clicked = cell.rect.collidepoint(mouse_pos)
+                    # Check if cell has a mine and move it
+                    if cell_clicked and cell.status == -1:
+                        self._move_mine(cell)
+
                     # Open the selected cell.
                     if cell_clicked and cell.state == 1:
                         cell.open_cell(self.cells, self)
@@ -207,13 +211,27 @@ class Minesweeper:
                 temp_cells.append(cell)
 
         # Create a list of random indexes.
-        mines_indexes = []
-        for _ in range(self.settings.mines):
-            mines_indexes.append(random.randint(0, len(temp_cells) - 1))
+        mines_indexes = random.sample(
+            range(0, len(temp_cells)), self.settings.mines)
 
         # Assign mines.
         for index in mines_indexes:
-            temp_cells[index].status = -1
+            temp_cells[int(index)].status = -1
+
+    def _move_mine(self, cell):
+        """Move mine to top left or first empty cell."""
+        # Find empty cell and give it a mine
+        finding_status = True
+        for row in self.cells:
+            for cell_all in row:
+                if cell_all.status != -1 and finding_status:
+                    cell_all.status = -1
+                    finding_status = False
+        # Remove mine
+        cell.status = 0
+
+        # Recalculate all neighbours
+        self._calculate_all_neighbours()
 
     def _calculate_all_neighbours(self):
         """Calculate neighbours of all the cells."""
