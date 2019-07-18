@@ -8,6 +8,7 @@ import pygame
 
 from button import Button
 from cell import Cell
+from scoreboard import Scoreboard
 from settings import Settings
 
 
@@ -35,6 +36,9 @@ class Minesweeper:
 
         # Create the button
         self.emoji_button = Button(self)
+
+        # Create scoreboard instance
+        self.scoreboard = Scoreboard(self)
 
         # Create cells and mines.
         self.cells = []
@@ -159,6 +163,8 @@ class Minesweeper:
                     elif cell.state == -1:
                         self.stats["mines_left"] += 1
                     cell.flag_cell(self.cells)
+                    # Update mines left image.
+                    self.scoreboard.prep_mines()
 
     def _update_screen(self):
         """Update all the elements on the screen."""
@@ -168,6 +174,8 @@ class Minesweeper:
         self._draw_cells()
         # Draw button to the screen.
         self.emoji_button.draw_button()
+        # Draw scoreboards to the screen.
+        self.scoreboard.show_scoreboards()
         # Update the screen.
         pygame.display.update()
 
@@ -238,7 +246,7 @@ class Minesweeper:
         for row in range(self.settings.cells_y):
             for column in range(self.settings.cells_x):
                 # Stop calculating if cell has a mine.
-                if self.cells[row][column].status == 0:
+                if self.cells[row][column].status != -1:
                     self._check_neighbours(row, column)
 
     def _check_neighbours(self, row, column):
@@ -271,6 +279,8 @@ class Minesweeper:
         if self.stats["state"] == 0:
             self.stats["time_float"] += 1 / self.settings.game_framerate
             self.stats["time"] = int(self.stats["time_float"])
+            # Change time every tick.
+            self.scoreboard.prep_time()
 
     def _reset_game(self):
         """Reset game to its starting state."""
@@ -287,6 +297,10 @@ class Minesweeper:
             "time": 0,
             "time_float": 0
         }
+
+        # Reset time image and mines left image.
+        self.scoreboard.prep_time()
+        self.scoreboard.prep_mines()
 
         # Reset emoji to the normal one
         self.emoji_button.current_emoji = 1
