@@ -58,7 +58,6 @@ class Minesweeper:
             self._check_solve()
             self._update_screen()
             self._update_time()
-            print(self.emoji_button.current_emoji)
 
     def _check_solve(self):
         """Check if all empty cells are open and respond."""
