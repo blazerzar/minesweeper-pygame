@@ -3,3 +3,7 @@
 8x8: 12 s (10 mines)
 8x8: 12 s (10 mines)
 8x8: 19 s (10 mines)
+8x8: 16 s (10 mines)
+8x8: 12 s (10 mines)
+8x8: 12 s (10 mines)
+8x8: 14 s (10 mines)

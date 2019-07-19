@@ -58,6 +58,7 @@ class Minesweeper:
             self._check_solve()
             self._update_screen()
             self._update_time()
+            print(self.emoji_button.current_emoji)
 
     def _check_solve(self):
         """Check if all empty cells are open and respond."""
@@ -102,7 +103,8 @@ class Minesweeper:
                         self._check_right_mouse(mouse_pos)
             elif event.type == pygame.MOUSEBUTTONUP:
                 mouse_pos = pygame.mouse.get_pos()
-                self.emoji_button.current_emoji *= -1
+                if self.emoji_button.current_emoji != 2:
+                    self.emoji_button.current_emoji *= -1
                 if event.button == 1:
                     self._check_left_mouse(mouse_pos)
                 elif event.button == 2:
