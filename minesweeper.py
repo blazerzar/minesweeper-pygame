@@ -34,6 +34,10 @@ class Minesweeper:
             "time_float": 0
         }
 
+        # Filename of the results file
+        self.filename = "results.txt"
+        self.file_dir = os.path.join(self.my_path, self.filename)
+
         # Create the button
         self.emoji_button = Button(self)
 
@@ -56,22 +60,33 @@ class Minesweeper:
             self._update_time()
 
     def _check_solve(self):
-        """Check if all empty cells are open."""
+        """Check if all empty cells are open and respond."""
+        # Check if all empty cells are open.
         all_open = True
         for row in self.cells:
             for cell in row:
                 if cell.status != -1 and cell.state == 1:
                     all_open = False
-
-        if all_open:
+        # If they are, change state to solved and flag all other mines.
+        if all_open and self.stats["state"] != 1:
+            # Change state to solved.
             self.stats["state"] = 1
             self.emoji_button.current_emoji = 2
-
+            # Flag all non flagged mines.
             for row in self.cells:
                 for cell in row:
                     # Flag all mine cells if not already
                     if cell.status == -1 and cell.state != -1:
                         cell.state = -1
+            # Save result and settings to file: results.txt
+            cells_x = self.settings.cells_x
+            cells_y = self.settings.cells_y
+            mines = self.settings.mines
+            time = self.stats["time"]
+
+            results_text = f"{cells_x}x{cells_y}: {time} s ({mines} mines)\n"
+            with open(self.file_dir, "a") as file_object:
+                file_object.write(results_text)
 
     def _check_events(self):
         """Check for events and respond to them."""
@@ -80,7 +95,8 @@ class Minesweeper:
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                self.emoji_button.current_emoji *= -1
+                if self.emoji_button.current_emoji != 2:
+                    self.emoji_button.current_emoji *= -1
                 if event.button == 3:
                     if self.stats["state"] == 0:
                         self._check_right_mouse(mouse_pos)
