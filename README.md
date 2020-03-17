@@ -1,4 +1,4 @@
-# minesweeper-pygame
+# Minesweeper with Pygame
 Minesweeper game made in Pyton with Pygame
 
 ### Settings
